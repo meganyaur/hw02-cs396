@@ -4,6 +4,8 @@ const resetDB = require("../config/scripts/populateDB")
 
 const Companion = require("./schema/Companion");
 const Doctor = require("./schema/Doctor");
+const FavoriteDoctor = require("./schema/FavoriteDoctor");
+const FavoriteCompanion = require("./schema/FavoriteCompanion");
 
 const express = require("express");
 const router = express.Router();
@@ -41,57 +43,166 @@ router.route("/doctors")
                 res.status(200).send(data);
             })
             .catch(err => {
-                res.status(500).send(err);
+                res.status(404).send(err);
             });
     })
     .post((req, res) => {
-        console.log("POST /doctors");
-        res.status(501).send();
+        const newDoc = req.body;
+        Doctor.create(newDoc).save()
+            .then(newDoc => {
+                res.status(201).send(newDoc);
+            })
+            .catch(err => {
+                res.status(500).send({
+                    message: "Error posting new doc."
+                });
+            })
     });
 
 // optional:
+
 router.route("/doctors/favorites")
     .get((req, res) => {
         console.log(`GET /doctors/favorites`);
-        res.status(501).send();
+        FavoriteDoctor.find({})
+            .then(data => {
+                res.status(200).send(data);
+            })
+            .catch(err => {
+                res.status(404).send(err);
+            });
     })
     .post((req, res) => {
         console.log(`POST /doctors/favorites`);
-        res.status(501).send();
+        if (!req.body.id ){
+            res.status(500).send({
+                message: "Uh oh, needs an id field!"
+            });
+            return;
+        };
+        Doctor.findOne({ _id: req.body.id })
+            .then(async doc => {
+                const allDocs = await FavoriteDoctor.find({});
+                for (const j of allDocs){
+                    if (j.doctor == req.body.id){
+                        res.status(500).send({
+                            message: "Doctor with id " + req.body.id + " already exists in doctors/favorites."
+                        });
+                        return;
+                    }
+                }
+                const newDoc = await FavoriteDoctor.create(doc).save();
+                res.status(201).send(newDoc);
+            })
+            .catch(err => {
+                res.status(500).send({
+                    message: "Doctor with id " + req.body.id + " does not exist."
+                });
+            })
     });
     
 router.route("/doctors/:id")
     .get((req, res) => {
         console.log(`GET /doctors/${req.params.id}`);
-        res.status(501).send();
+        Doctor.findOne({ _id: req.params.id })
+            .then(doc => {
+                res.status(200).send(doc);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Doctor with id " + req.params.id + " does not exist."
+                });
+            })
     })
     .patch((req, res) => {
         console.log(`PATCH /doctors/${req.params.id}`);
-        res.status(501).send();
+        Doctor.findOneAndUpdate(
+            { _id: req.params.id }, 
+            req.body,
+            { new: true }
+        )
+            .then(doc => {
+                res.status(200).send(doc)
+                })
+            .catch(err =>{
+                res.status(404).send({
+                    message: "Doctor with id " + req.params.id + " does not exist."
+                });
+            })
     })
     .delete((req, res) => {
         console.log(`DELETE /doctors/${req.params.id}`);
-        res.status(501).send();
+        Doctor.findOneAndDelete({ _id: req.params.id })
+            .then(doc => {
+                res.status(200).send(null);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Doctor with id " + req.params.id + " does not exist."
+                });
+            })
     });
     
 router.route("/doctors/:id/companions")
     .get((req, res) => {
         console.log(`GET /doctors/${req.params.id}/companions`);
-        res.status(501).send();
+        Companion.find({ doctors: req.params.id })
+            .then(doc => {
+                res.status(200).send(doc);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Doctor with id " + req.params.id + " does not exist."
+                });
+            })
     });
     
 
 router.route("/doctors/:id/goodparent")
     .get((req, res) => {
         console.log(`GET /doctors/${req.params.id}/goodparent`);
-        res.status(501).send();
+        Companion.find({ doctors: req.params.id })
+            .then(doc => {
+                let good = true;
+                for (const i of doc){
+                    if (i.alive == false) {
+                        good = false;
+                    }
+                }
+                res.status(200).send(good);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Doctor with id " + req.params.id + " does not exist."
+                });
+            })
     });
 
 // optional:
 router.route("/doctors/favorites/:doctor_id")
+    .get((req, res) => {
+        console.log(`GET /doctors/favorites/${req.params.doctor_id}`);
+        FavoriteDoctor.findOne({ doctor: req.params.doctor_id })
+            .then(doc => {
+                res.status(200).send(doc);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Doctor with id " + req.params.doctor_id + " does not exist in favorites."
+                });
+            })
+    })
     .delete((req, res) => {
         console.log(`DELETE /doctors/favorites/${req.params.doctor_id}`);
-        res.status(501).send();
+        FavoriteDoctor.findOneAndDelete({ doctor: req.params.doctor_id })
+            .then(doc => {
+                res.status(200).send(null);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Doctor with id " + req.params.doctor_id + " does not exist in favorites."
+                });
+            })
     });
 
 router.route("/companions")
@@ -103,62 +214,193 @@ router.route("/companions")
                 res.status(200).send(data);
             })
             .catch(err => {
-                res.status(500).send(err);
+                res.status(404).send(err);
             });
     })
     .post((req, res) => {
         console.log("POST /companions");
-        res.status(501).send();
+        const newCom = req.body;
+        Companion.create(newCom).save()
+            .then(newCom => {
+                res.status(201).send(newCom);
+            })
+            .catch(err => {
+                res.status(500).send({
+                    message: "Error posting new companion."
+                });
+            })
     });
 
 router.route("/companions/crossover")
     .get((req, res) => {
         console.log(`GET /companions/crossover`);
-        res.status(501).send();
+        Companion.find({})
+            .then(com => {
+                let cross = [];
+                for (const i of com){
+                    if (i.doctors.length > 1){
+                        cross.push(i);
+                    }
+                }
+                res.status(200).send(cross);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Companion with id " + req.params.id + " does not exist."
+                });
+            })
     });
 
 // optional:
 router.route("/companions/favorites")
     .get((req, res) => {
         console.log(`GET /companions/favorites`);
-        res.status(501).send();
+        FavoriteCompanion.find({})
+            .then(data => {
+                res.status(200).send(data);
+            })
+            .catch(err => {
+                res.status(404).send(err);
+            });
     })
     .post((req, res) => {
         console.log(`POST /companions/favorites`);
-        res.status(501).send();
-    })
+        if (!req.body.id ){
+            res.status(500).send({
+                message: "Uh oh, needs an id field!"
+            });
+            return;
+        };
+        Companion.findOne({ _id: req.body.id })
+            .then(async com => {
+                const allComs = await FavoriteCompanion.find({});
+                for (const j of allComs){
+                    if (j.companion == req.body.id){
+                        res.status(500).send({
+                            message: "Companion with id " + req.body.id + " already exists in companions/favorites."
+                        });
+                        return;
+                    }
+                }
+                const newCom = await FavoriteCompanion.create(com).save();
+                res.status(201).send(newCom);
+            })
+            .catch(err => {
+                res.status(500).send({
+                    message: "Doctor with id " + req.body.id + " does not exist."
+                });
+            })
+    });
 
 router.route("/companions/:id")
     .get((req, res) => {
         console.log(`GET /companions/${req.params.id}`);
-        res.status(501).send();
+        Companion.findOne({ _id: req.params.id })
+            .then(com => {
+                res.status(200).send(com);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Companion with id " + req.params.id + " does not exist."
+                });
+            })
     })
     .patch((req, res) => {
         console.log(`PATCH /companions/${req.params.id}`);
-        res.status(501).send();
+        Companion.findOneAndUpdate(
+            { _id: req.params.id }, 
+            req.body,
+            { new: true }
+        )
+            .then(com => {
+                res.status(200).send(com)
+                })
+            .catch(err =>{
+                res.status(404).send({
+                    message: "Companion with id " + req.params.id + " does not exist."
+                });
+            })
     })
     .delete((req, res) => {
         console.log(`DELETE /companions/${req.params.id}`);
-        res.status(501).send();
+        Companion.findOneAndDelete({ _id: req.params.id })
+            .then(com => {
+                res.status(200).send(null);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Companion with id " + req.params.id + " does not exist."
+                });
+            })
     });
 
 router.route("/companions/:id/doctors")
     .get((req, res) => {
         console.log(`GET /companions/${req.params.id}/doctors`);
-        res.status(501).send();
+        Companion.findOne({ _id: req.params.id })
+            .then( async com => {
+                let doctors = [];
+                for (const i of com.doctors){
+                    const doctor = await Doctor.findById(i);
+                    doctors.push(doctor);
+                }
+                res.status(200).send(doctors);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Companion with id " + req.params.id + " does not exist."
+                });
+            })
     });
 
 router.route("/companions/:id/friends")
     .get((req, res) => {
         console.log(`GET /companions/${req.params.id}/friends`);
-        res.status(501).send();
+        Companion.findOne({ _id: req.params.id })
+            .then(async com => {
+                let friends = [];
+                const companions = await Companion.find({});
+                for (const i of com.seasons){
+                    for (const j of companions){
+                        if (j.seasons.includes(i) && !friends.includes(j) && j._id != req.params.id){
+                            friends.push(j);
+                        }
+                    }
+                }
+                res.status(200).send(friends);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Companion with id " + req.params.id + " does not exist."
+                });
+            })
     });
 
 // optional:
 router.route("/companions/favorites/:companion_id")
+    .get((req, res) => {
+        console.log(`GET /companions/favorites/${req.params.companion_id}`);
+        FavoriteCompanion.findOne({ companion: req.params.companion_id })
+            .then(com => {
+                res.status(200).send(com);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Companion with id " + req.params.companion_id + " does not exist in favorites."
+                });
+            })
+    })
     .delete((req, res) => {
         console.log(`DELETE /companions/favorites/${req.params.companion_id}`);
-        res.status(501).send();
+        FavoriteCompanion.findOneAndDelete({ companion: req.params.companion_id })
+            .then(com => {
+                res.status(200).send(null);
+            })
+            .catch(err => {
+                res.status(404).send({
+                    message: "Companion with id " + req.params.companion_id + " does not exist in favorites."
+                });
+            })
     });
 
 module.exports = router;

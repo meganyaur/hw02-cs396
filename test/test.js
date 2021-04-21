@@ -31,7 +31,9 @@ const expect = chai.expect;
 
 describe("/doctors", () => {
 
-    describe("GET", () => {
+    describe("GET",function ()  {
+
+        this.timeout(15000);
 
         beforeEach(done => {
             resetDB(done);
@@ -46,7 +48,7 @@ describe("/doctors", () => {
                     done();
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
     });
 
@@ -74,7 +76,7 @@ describe("/doctors", () => {
                     
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("should create throw an error if missing data", done => {
             axios.post(utils.route("/doctors"), {name: 'Blah'})
@@ -90,7 +92,7 @@ describe("/doctors", () => {
                     }
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
     });
 });
 
@@ -124,11 +126,11 @@ describe("/doctors/:id", () => {
                     done();
                 })
                 .catch(err => done(err));   
-        });
+        }).timeout(5000);
         
         it("should return a 404 error for a non-existent id", done => {
             expect404('/doctors/nonsense', done);
-        });
+        }).timeout(5000);
     });
 
     describe("PATCH", () => {
@@ -154,7 +156,7 @@ describe("/doctors/:id", () => {
                         .catch(err => done(err))
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("should update the given doctor with the specified information", done => {
             const _id = "" + fixtures.doctor._id;
@@ -177,7 +179,7 @@ describe("/doctors/:id", () => {
                         .catch(err => done(err))
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
     });
 
     describe("DELETE", () => {
@@ -207,7 +209,7 @@ describe("/doctors/:id", () => {
                         .catch(err => done(err));
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
     });
 });
 
@@ -226,7 +228,7 @@ describe("/doctors/:id/companions", () => {
                     done();
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
         
         it("should return a list of all doctors (D11: Matt Smith)", done => {
             const _id = "" + fixtures.doctorD11._id;
@@ -239,11 +241,11 @@ describe("/doctors/:id/companions", () => {
                     done();
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("Invalid doctor throws 404", done => {
             expect404('/doctors/nonsense/companions', done);
-        });
+        }).timeout(5000);
     });
 });
 
@@ -260,7 +262,7 @@ describe("/doctors/:id/goodparent", () => {
                     done();
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("Bad parent detected (D11: Matt Smith)", done => {
             _id = '' + fixtures.doctorD11._id;
@@ -271,7 +273,7 @@ describe("/doctors/:id/goodparent", () => {
                     done();
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("Good parent detected (D9: Christopher Eccelson)", done => {
             _id = '' + fixtures.doctorD9._id;
@@ -282,11 +284,11 @@ describe("/doctors/:id/goodparent", () => {
                     done();
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("Invalid parent throws 404", done => {
             expect404('/doctors/nonsense/goodparent', done);
-        });
+        }).timeout(5000);
 
     });
 });
@@ -310,7 +312,7 @@ describe("/companions", () => {
                     done();
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
     });
 
@@ -338,7 +340,7 @@ describe("/companions", () => {
                     
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("should create throw an error if missing data", done => {
             axios.post(utils.route("/companions"), {name: 'Blah'})
@@ -354,7 +356,7 @@ describe("/companions", () => {
                     }
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
     });
 });
 
@@ -375,11 +377,11 @@ describe("/companions/:id", () => {
                     done();
                 })
                 .catch(err => done(err));   
-        });
+        }).timeout(5000);
 
         it("Should return a 404 error for a non-existent id", done => {
             expect404('/companions/nonsense', done);
-        });
+        }).timeout(5000);
 
     });
 
@@ -426,7 +428,7 @@ describe("/companions/:id", () => {
                         .catch(err => done(err))
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("should update the given companion with the specified information", done => {
             const _id = "" + fixtures.companion._id;
@@ -451,11 +453,11 @@ describe("/companions/:id", () => {
                         .catch(err => done(err))
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("Should return a 404 error for a non-existent id", done => {
             expect404('/companions/nonsense', done);
-        });
+        }).timeout(5000);
     });
 
     describe("DELETE", () => {
@@ -485,11 +487,11 @@ describe("/companions/:id", () => {
                         .catch(err => done(err));
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("Should return a 404 error for a non-existent id", done => {
             expect404('/companions/nonsense', done);
-        });
+        }).timeout(5000);
 
     });
 });
@@ -511,11 +513,11 @@ describe("/companions/:id/doctors", () => {
                     done();
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("Should return a 404 error for a non-existent id", done => {
             expect404('/companions/nonsense/doctors', done);
-        });
+        }).timeout(5000);
     });
 });
 
@@ -541,7 +543,7 @@ describe("/companions/:id/friends", () => {
                     done();
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("should return all of the friends of companion 'Sarah Sutton'", done => {
             // and one more...
@@ -557,11 +559,11 @@ describe("/companions/:id/friends", () => {
                     done();
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
         it("should return a 404 error for a non-existent id", done => {
             expect404('/companions/dummyId/friends', done);
-        });
+        }).timeout(5000);
 
     });
 
@@ -584,7 +586,7 @@ describe("/companions/crossover", () => {
                     done();
                 })
                 .catch(err => done(err));
-        });
+        }).timeout(5000);
 
     });
 
